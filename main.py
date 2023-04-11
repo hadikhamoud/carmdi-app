@@ -4,91 +4,61 @@ from flask_sqlalchemy import SQLAlchemy as alc
 from flask_cors import CORS, cross_origin
 import os
 from dotenv import load_dotenv
-
+from google.cloud.sql.connector import Connector
+import sqlalchemy
 load_dotenv()
 
 
 app = Flask(__name__)
 
 
-INSTANCE_CONNECTION_NAME = os.environ.get("INSTANCE_CONNECTION_NAME")
-print(f"Your instance connection name is: {INSTANCE_CONNECTION_NAME}")
-DB_USER = os.environ.get("DB_USER")
-DB_PASS =os.environ.get("DB_PASS") 
-DB_NAME =os.environ.get("DB_NAME")
 
 
-from google.cloud.sql.connector import Connector
-import sqlalchemy
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI_TEST') 
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# initialize Connector object
-connector = Connector()
 
 CORS(app)
 
-# function to return the database connection object
-def getconn():
-    conn = connector.connect(
-        INSTANCE_CONNECTION_NAME,
-        "pg8000",
-        user=DB_USER,
-        password=DB_PASS,
-        db=DB_NAME
-    )
-    return conn
-
-# create connection pool with 'creator' argument to our connection object function
-pool = sqlalchemy.create_engine(
-    "postgresql+pg8000://",
-    creator=getconn,
-)
-
-db_conn = pool.connect()
-
-
-# results = db_conn.execute('SELECT * FROM "CARMDI" LIMIT 5').fetchall()
-
-  # show results
-# for row in results:
-#     print(row)
+#connect to the database
+db = alc(app)
 
 
 
 
-# db = alc(app)
-
-
-
-# class CARMDI(db.Model):
-#     ActualNB = db.Column(db.String(250), nullable = True,primary_key=True)
-#     CodeDesc = db.Column(db.String(250), nullable = True,primary_key=True)
-#     PRODDATE = db.Column(db.String(250), nullable = True)
-#     Chassis = db.Column(db.String(250), nullable = True)
-#     Moteur= db.Column(db.String(250), nullable = True)
-#     dareaquisition= db.Column(db.String(250), nullable = True)
-#     PreMiseCirc= db.Column(db.String(250), nullable = True)
-#     CouleurDesc= db.Column(db.String(250), nullable = True)
-#     TypeDesc= db.Column(db.String(250), nullable = True)
-#     MarqueDesc= db.Column(db.String(250), nullable = True)
-#     UtilisDesc= db.Column(db.String(250), nullable = True)
-#     Prenom= db.Column(db.String(250), nullable = True)
-#     Nom= db.Column(db.String(250), nullable = True)
-#     Addresse= db.Column(db.String(250), nullable = True)
-#     NomMere= db.Column(db.String(250), nullable = True)
-#     TelProp= db.Column(db.String(250), nullable = True)
-#     NoRegProp= db.Column(db.String(250), nullable = True)
-#     AgeProp= db.Column(db.String(250), nullable = True)
-#     BirthPlace= db.Column(db.String(250), nullable = True)
-#     HorsService= db.Column(db.String(250), nullable = True)
+class CARMDI(db.Model):
+    __tablename__ = 'CARMDI'
+    
+    ActualNB = db.Column(db.String(250), nullable = True,primary_key=True)
+    CodeDesc = db.Column(db.String(250), nullable = True,primary_key=True)
+    PRODDATE = db.Column(db.String(250), nullable = True)
+    Chassis = db.Column(db.String(250), nullable = True)
+    Moteur= db.Column(db.String(250), nullable = True)
+    dareaquisition= db.Column(db.String(250), nullable = True)
+    PreMiseCirc= db.Column(db.String(250), nullable = True)
+    CouleurDesc= db.Column(db.String(250), nullable = True)
+    TypeDesc= db.Column(db.String(250), nullable = True)
+    MarqueDesc= db.Column(db.String(250), nullable = True)
+    UtilisDesc= db.Column(db.String(250), nullable = True)
+    Prenom= db.Column(db.String(250), nullable = True)
+    Nom= db.Column(db.String(250), nullable = True)
+    Addresse= db.Column(db.String(250), nullable = True)
+    NomMere= db.Column(db.String(250), nullable = True)
+    TelProp= db.Column(db.String(250), nullable = True)
+    NoRegProp= db.Column(db.String(250), nullable = True)
+    AgeProp= db.Column(db.String(250), nullable = True)
+    BirthPlace= db.Column(db.String(250), nullable = True)
+    HorsService= db.Column(db.String(250), nullable = True)
 
 
 @app.route('/view',methods=["POST"])
 def view():
     number=request.json["Number"]
+    
+    # from app, get the db instance
 
-#WHERE CARMDI.actualnb = {number}
+    cars = CARMDI.query.filter_by(ActualNB=str(number)).all()
 
-    cars = db_conn.execute(f'SELECT * FROM public."CARMDI" WHERE "ActualNB" = {number}').fetchall()
     # response list consisting user details
     response = list()
  
@@ -123,6 +93,8 @@ def view():
     }, 200)
 
 
+
+
 def handle_tel_num(telNum):
     output=""
     for ch in telNum:
@@ -137,7 +109,6 @@ def handle_tel_num(telNum):
 def telNum():
     telNumber=request.json["telNumber"]
 
-    telNumbers = db_conn.execute(f'SELECT * FROM public."CARMDI" WHERE "TelProp" like \'%{telNumber}%\'').fetchall()
     response = list()
  
     for telnum in telNumbers:
