@@ -18,7 +18,7 @@ def handle_data(data, col_names):
     return dataJSON
 
 
-# select data from the table matching a specific number, wrap it in a function
+# select data from the table  matching a specific number, wrap it in a function
 def select_cars(value):
     c.execute('SELECT * FROM CARMDI WHERE ActualNB = ?', (value,))
     #get column names
