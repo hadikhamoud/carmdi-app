@@ -1,1 +1,1 @@
-*.db filter=lfs diff=lfs merge=lfs -text
+CARMDI.db filter=lfs diff=lfs merge=lfs -text
